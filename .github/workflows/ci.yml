@@ -1,0 +1,31 @@
+name: Python CI
+
+on:
+  push:
+    branches: [test, beta, master]
+  pull_request:
+    branches: [beta, master]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: basic-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 获取项目代码
+        uses: actions/checkout@v6
+
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 运行自动测试
+        run: python -m unittest discover -s tests -v
+
+      - name: 运行项目自检
+        run: python main.py --check
