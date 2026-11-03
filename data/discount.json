@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "airline": "云翼航空（模拟）",
+  "threshold_cents": 80000,
+  "reduction_cents": 5000,
+  "start_date": "2026-11-01",
+  "end_date": "2026-11-30"
+}

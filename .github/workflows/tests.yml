@@ -1,15 +1,29 @@
-name: Python checks
-on: [push, pull_request]
+name: Python CI
+
+on:
+  push:
+    branches: [test, beta, master]
+  pull_request:
+    branches: [beta, master]
+
+permissions:
+  contents: read
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.11', '3.12', '3.13', '3.14']
+  check:
+    name: basic-check
+    runs-on: windows-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-      - run: python -m unittest discover -s tests -v
-      - run: python main.py --check
+          python-version: '3.12'
+      - name: Compile Python sources
+        run: python -m compileall -q main.py flight_app tests tools
+      - name: Run all tests including GUI
+        run: python tools/run_tests.py --require-gui
+      - name: Check data and query services
+        run: python main.py --check

@@ -45,3 +45,8 @@ def validate_criteria(criteria: SearchCriteria, cities: tuple[str, ...]) -> None
         raise ValidationError("预算须使用非负整数分，且不超过100万元。")
     if not isinstance(criteria.sort_order, SortOrder):
         raise ValidationError("不支持的排序方式。")
+
+    if type(criteria.direct_only) is not bool:
+        raise ValidationError("直飞条件必须为布尔值。")
+    if criteria.airline is not None and (not isinstance(criteria.airline, str) or not criteria.airline.strip()):
+        raise ValidationError("航司条件须为非空名称或None。")

@@ -1,7 +1,7 @@
 """单路线单日期查询服务。日期范围和多城市可在上层复用本服务。"""
 from .errors import DataError
 from .filters import flight_matches, sort_quotes
-from .models import Itinerary, Quote, SearchCriteria
+from .models import Itinerary, PriceLine, Quote, SearchCriteria
 from .pricing import NoDiscountPricing, PricingPolicy
 from .provider import FlightProvider
 from .validation import validate_criteria
@@ -25,11 +25,14 @@ class SearchService:
         results = []
         for itinerary in itineraries:
             q = self.pricing.quote(itinerary)
-            if (q.itinerary != itinerary or q.currency != "CNY"
+            if (not isinstance(q, Quote) or q.itinerary != itinerary or q.currency != "CNY"
                     or any(type(v) is not int for v in (q.base_price_cents, q.discount_cents, q.final_price_cents))
                     or q.base_price_cents != itinerary.base_price_cents
                     or not 0 <= q.discount_cents <= q.base_price_cents
                     or q.final_price_cents != q.base_price_cents - q.discount_cents
+                    or not isinstance(q.breakdown, tuple)
+                    or any(not isinstance(line, PriceLine) or type(line.amount_cents) is not int
+                           or not isinstance(line.label, str) or not line.label.strip() for line in q.breakdown)
                     or sum(line.amount_cents for line in q.breakdown) != q.final_price_cents):
                 raise DataError("报价模块返回了不一致的价格，请检查计价规则。")
             if criteria.budget_cents is None or q.final_price_cents <= criteria.budget_cents:

@@ -11,3 +11,7 @@ class ValidationError(FlightAppError):
 
 class DataError(FlightAppError):
     """本地航班数据无法读取或不满足数据约束。"""
+
+
+class SearchCancelled(FlightAppError):
+    """用户主动取消查询，不作为程序故障。"""
