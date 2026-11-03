@@ -115,3 +115,17 @@ class Quote:
     final_price_cents: int
     breakdown: tuple[PriceLine, ...]
     currency: str = "CNY"
+
+
+@dataclass(frozen=True)
+class RangeCriteria:
+    """灵活单程查询快照；原查询模型保持兼容。"""
+    origins: tuple[str, ...]
+    destinations: tuple[str, ...]
+    start_date: date
+    end_date: date
+    budget_cents: int | None = None
+    direct_only: bool = False
+    airline: str | None = None
+    sort_order: SortOrder = SortOrder.PRICE
+    discount_enabled: bool = True
