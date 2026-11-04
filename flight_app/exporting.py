@@ -26,7 +26,7 @@ def export_quotes(path: Path | str, quotes: Sequence[Quote], criteria: SearchCri
             writer.writerow(headers)
             for q in quotes:
                 a, b = q.itinerary.outbound, q.itinerary.inbound
-                row = ["模拟数据 仅供教学", criteria.origin, criteria.destination, criteria.departure_date.isoformat(),
+                row = ["模拟数据 仅供教学", a.origin.city, a.destination.city, criteria.departure_date.isoformat(),
                        criteria.return_date.isoformat() if criteria.return_date else "", money(criteria.budget_cents) if criteria.budget_cents is not None else "不限",
                        "是" if criteria.direct_only else "否", criteria.airline or "不限", criteria.sort_order.value,
                        a.flight_numbers, a.airline_names, a.departure.isoformat(), a.arrival.isoformat(),

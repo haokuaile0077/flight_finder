@@ -12,7 +12,7 @@ from .pricing import (CompositePricing, NoDiscountPricing, PercentageDiscountPri
                       PricingPolicy, ThresholdDiscountPricing)
 from .provider import JsonFlightProvider
 from .service import SearchService
-from .validation import parse_budget, parse_date
+from .validation import parse_date
 
 BG = "#F3F6FA"
 INK = "#162B45"
@@ -51,7 +51,6 @@ class FlightApp:
         return_initial = provider.dates[min(14, len(provider.dates)-1)] if provider.dates else None
         self.dep_date = tk.StringVar(value=initial.isoformat() if initial else "2026-11-10")
         self.ret_date = tk.StringVar(value=return_initial.isoformat() if return_initial else "2026-11-15")
-        self.budget = tk.StringVar()
         self.airline = tk.StringVar(value="不限")
         self.direct = tk.BooleanVar(value=False)
         self.sort_order = tk.StringVar(value=SortOrder.PRICE.value)
@@ -221,11 +220,9 @@ class FlightApp:
         ttk.Entry(self.promo_threshold_frame, textvariable=self.promo_reduce, width=7).pack(side="left", padx=(4, 4))
         ttk.Label(self.promo_threshold_frame, text="元", style="CardMuted.TLabel").pack(side="left")
 
-        # 原有：预算/航司/直飞/查询按钮
+        # 航司/直飞/查询按钮
         options = ttk.Frame(card, style="Card.TFrame")
         options.pack(fill="x", pady=(12, 0))
-        ttk.Label(options, text="预算上限 ¥", style="Card.TLabel").pack(side="left")
-        ttk.Entry(options, textvariable=self.budget, width=11).pack(side="left", padx=(6, 14))
         ttk.Label(options, text="全程航司", style="Card.TLabel").pack(side="left")
         ttk.Combobox(options, textvariable=self.airline, values=("不限",)+self.provider.airlines, state="readonly", width=17).pack(side="left", padx=(6, 14))
         ttk.Checkbutton(options, text="仅看直飞", variable=self.direct).pack(side="left", padx=(0, 14))
@@ -248,11 +245,11 @@ class FlightApp:
         right = ttk.Frame(self.body, style="Card.TFrame", padding=14)
         self.body.add(left, weight=3)
         self.body.add(right, weight=1)
-        columns = ("out", "back", "airline", "type", "price")
+        columns = ("route", "out", "back", "airline", "type", "price")
         self.tree = ttk.Treeview(left, columns=columns, show="headings", selectmode="browse")
-        for col, label, width in (("out", "去程 / 起降", 185), ("back", "返程 / 起降", 185), ("airline", "航司", 135), ("type", "行程", 70), ("price", "合计 ¥", 95)):
+        for col, label, width in (("route", "航线", 120), ("out", "去程 / 起降", 175), ("back", "返程 / 起降", 175), ("airline", "航司", 125), ("type", "行程", 65), ("price", "合计 ¥", 95)):
             self.tree.heading(col, text=label)
-            self.tree.column(col, width=width, minwidth=65, anchor="e" if col=="price" else "w")
+            self.tree.column(col, width=width, minwidth=55, anchor="e" if col=="price" else "w")
         ys = ttk.Scrollbar(left, orient="vertical", command=self.tree.yview)
         xs = ttk.Scrollbar(left, orient="horizontal", command=self.tree.xview)
         self.tree.configure(yscrollcommand=ys.set, xscrollcommand=xs.set)
@@ -272,7 +269,7 @@ class FlightApp:
         scrollbar = ttk.Scrollbar(detail_frame, orient="vertical", command=self.details.yview)
         self.details.configure(yscrollcommand=scrollbar.set)
         scrollbar.pack(side="right", fill="y");self.details.pack(side="left", fill="both", expand=True)
-        self._set_details("输入查询条件后点击「查询航班」。\n\n试一试：\n深圳 → 北京\n出发 2026-11-10\n返程 2026-11-15\n\n预算留空表示不限。\n航司筛选适用于行程的每一个航段。\n跨日到达会标记 +1天。")
+        self._set_details("输入查询条件后点击「查询航班」。\n\n试一试：\n深圳 → 北京\n出发 2026-11-10\n返程 2026-11-15\n\n航司筛选适用于行程的每一个航段。\n跨日到达会标记 +1天。")
         bottom = ttk.Frame(page)
         bottom.pack(side="bottom", fill="x", pady=(10, 0), before=self.body)
         self.status_label = ttk.Label(bottom, textvariable=self.status, style="Muted.TLabel", wraplength=950)
@@ -354,7 +351,7 @@ class FlightApp:
         self.trip.set("单程");self.origin.set("深圳");self.destination.set("北京")
         self.dep_date.set("2026-11-10");self.ret_date.set("2026-11-15")
         self.range_start.set("2026-11-10");self.range_end.set("2026-11-20")
-        self.budget.set("");self.direct.set(False);self.airline.set("不限");self.sort_order.set(SortOrder.PRICE.value)
+        self.direct.set(False);self.airline.set("不限");self.sort_order.set(SortOrder.PRICE.value)
         self.query_mode.set(MODE_SINGLE);self.promo_type.set("无优惠")
         self.promo_discount_pct.set("20");self.promo_threshold.set("500");self.promo_reduce.set("50")
         self._clear_results()
@@ -363,7 +360,7 @@ class FlightApp:
     def _criteria(self):
         return SearchCriteria(self.origin.get(), self.destination.get(), parse_date(self.dep_date.get(), "出发日期"),
                               parse_date(self.ret_date.get(), "返程日期") if self.trip.get()=="往返" else None,
-                              parse_budget(self.budget.get()), self.direct.get(),
+                              None, self.direct.get(),
                               None if self.airline.get()=="不限" else self.airline.get(), SortOrder(self.sort_order.get()))
 
     def _clear_results(self):
@@ -407,7 +404,7 @@ class FlightApp:
         if start > end:
             raise FlightAppError("起始日期不能晚于结束日期。")
         return SearchCriteria(self.origin.get(), self.destination.get(), start, None,
-                              parse_budget(self.budget.get()), self.direct.get(),
+                              None, self.direct.get(),
                               None if self.airline.get()=="不限" else self.airline.get(),
                               SortOrder(self.sort_order.get()))
 
@@ -421,7 +418,7 @@ class FlightApp:
             raise FlightAppError("请至少选择一个到达城市。")
         # 这里只返回一个标准 criteria，origins 和 dests 在 search 里单独传入
         return SearchCriteria(origins[0], dests[0], parse_date(self.dep_date.get(), "出发日期"), None,
-                              parse_budget(self.budget.get()), self.direct.get(),
+                              None, self.direct.get(),
                               None if self.airline.get()=="不限" else self.airline.get(),
                               SortOrder(self.sort_order.get()))
 
@@ -459,9 +456,10 @@ class FlightApp:
         self.tree.delete(*self.tree.get_children())
         for index, q in enumerate(self.results):
             a, b = q.itinerary.outbound, q.itinerary.inbound
+            route = f"{a.origin.city} → {a.destination.city}"
             airlines = " / ".join(dict.fromkeys(s.airline.replace("（模拟）", "") for leg in q.itinerary.legs for s in leg.segments))
             kind = "全程直飞" if all(f.direct for f in q.itinerary.legs) else "含中转"
-            self.tree.insert("", "end", iid=str(index), values=(leg_label(a), leg_label(b), airlines, kind, money(q.final_price_cents)), tags=("alternate",) if index%2 else ())
+            self.tree.insert("", "end", iid=str(index), values=(route, leg_label(a), leg_label(b), airlines, kind, money(q.final_price_cents)), tags=("alternate",) if index%2 else ())
         c = self.last_criteria
         if mode == MODE_SINGLE:
             self.summary.set(f"{c.origin} → {c.destination}  {'往返组合' if c.return_date else '单程'}")
@@ -489,7 +487,7 @@ class FlightApp:
                 self.status.set(f"多城市组合查询共{len(self.results)}条{promo_info}。修改条件后需重新查询。")
         else:
             self.selected_route.set("没有符合条件的行程");self.selected_price.set("—")
-            self._set_details("未找到匹配航班。\n\n请检查数据覆盖日期、航线或放宽预算、航司及直飞条件。\n\n模拟数据仅覆盖2026年11月。")
+            self._set_details("未找到匹配航班。\n\n请检查数据覆盖日期、航线或放宽航司及直飞条件。\n\n模拟数据仅覆盖2026年11月。")
             self.status.set("没有符合条件的行程；未超售的航班才会出现在结果中。")
 
     def resort(self, event=None):

@@ -69,15 +69,16 @@ class GuiTests(unittest.TestCase):
         self.assertEqual(str(self.app.export_button['state']),'disabled')
 
     def test_sort_and_export_use_last_query_snapshot(self):
-        self.run_query();self.app.budget.set('0')
+        self.run_query()
         self.app.sort_order.set(SortOrder.DEPARTURE.value);self.app.resort()
         self.assertIsNone(self.app.last_criteria.budget_cents)
         self.assertEqual(self.app.results,tuple(sorted(self.app.results,key=lambda q:(q.itinerary.outbound.departure,q.final_price_cents,q.itinerary.id))))
 
     def test_empty_result_and_swap_reset(self):
-        self.app.budget.set('0');self.run_query()
+        self.app.origin.set('大同');self.app.destination.set('上海');self.run_query()
         self.assertEqual(self.app.results,())
         self.assertIn('没有',self.app.status.get())
+        self.app.origin.set('深圳');self.app.destination.set('北京')
         self.app.swap();self.assertEqual(self.app.origin.get(),'北京')
         self.app.reset();self.assertEqual(self.app.origin.get(),'深圳')
         self.assertEqual(str(self.app.return_entry['state']),'disabled')

@@ -40,8 +40,7 @@ class SearchService:
         for itinerary in itineraries:
             q = self.pricing.quote(itinerary)
             _check_quote_consistency(q, itinerary)
-            if criteria.budget_cents is None or q.final_price_cents <= criteria.budget_cents:
-                results.append(q)
+            results.append(q)
         return tuple(results)
 
     def search(self, criteria: SearchCriteria) -> tuple[Quote, ...]:

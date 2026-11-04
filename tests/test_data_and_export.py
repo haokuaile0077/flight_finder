@@ -13,7 +13,7 @@ from flight_app.models import SearchCriteria
 from flight_app.presentation import detail_text, leg_label
 from flight_app.provider import JsonFlightProvider
 from flight_app.service import SearchService
-from flight_app.validation import parse_budget, parse_date
+from flight_app.validation import parse_date
 from tests.helpers import MemoryProvider, flight
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -26,16 +26,6 @@ class InputTests(unittest.TestCase):
     def test_invalid_dates(self):
         for text in ("", "2026-02-29","2026-11-31","2026/11/10","20261110","2026-1-1"):
             with self.subTest(text=text),self.assertRaises(ValidationError):parse_date(text)
-
-    def test_budget_decimal_and_blank(self):
-        self.assertIsNone(parse_budget(" "))
-        self.assertEqual(parse_budget("0"),0)
-        self.assertEqual(parse_budget("123.45"),12345)
-        self.assertEqual(parse_budget("1000000"),100000000)
-
-    def test_invalid_budget(self):
-        for text in ("-1","1.001","abc","NaN","Infinity","1000000.01"):
-            with self.subTest(text=text),self.assertRaises(ValidationError):parse_budget(text)
 
 
 class DataTests(unittest.TestCase):

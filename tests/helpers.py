@@ -4,7 +4,10 @@ from flight_app.models import Airport, CHINA_TZ, Flight, Segment
 
 AIRPORTS = {"深圳": Airport("SZX", "深圳", "深圳宝安"),
             "北京": Airport("PEK", "北京", "北京首都"),
-            "上海": Airport("SHA", "上海", "上海虹桥")}
+            "上海": Airport("SHA", "上海", "上海虹桥"),
+            "广州": Airport("CAN", "广州", "广州白云"),
+            "成都": Airport("CTU", "成都", "成都双流"),
+            "西安": Airport("XIY", "西安", "西安咸阳")}
 
 
 def flight(id="out", origin="深圳", dest="北京", start="2026-11-10T08:00", end="2026-11-10T11:00", price=50000, seats=5, airline="云翼"):
